@@ -1,0 +1,93 @@
+x-app-env: &app-env
+  NODE_ENV: production
+  DATABASE_URL: postgres://creditcheck:creditcheck@postgres:5432/creditcheck
+  RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+  EXTERNAL_API_URL: http://mock-external-api:4000
+  JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-please-123456}
+  JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+  CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+  ADMIN_NAME: ${ADMIN_NAME:-Administrador}
+  ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@creditcheck.local}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@12345}
+  CONSULTATION_TTL_HOURS: ${CONSULTATION_TTL_HOURS:-24}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: creditcheck
+      POSTGRES_PASSWORD: creditcheck
+      POSTGRES_DB: creditcheck
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U creditcheck -d creditcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  mock-external-api:
+    build: .
+    command: ["npm", "run", "start:mock"]
+    environment:
+      MOCK_PORT: 4000
+      MOCK_FAILURE_RATE: ${MOCK_FAILURE_RATE:-0.1}
+    ports:
+      - "4000:4000"
+
+  migrate:
+    build: .
+    command: ["npm", "run", "migrate:up"]
+    environment:
+      DATABASE_URL: postgres://creditcheck:creditcheck@postgres:5432/creditcheck
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build: .
+    environment:
+      <<: *app-env
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: ["npm", "run", "start:worker"]
+    environment:
+      <<: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      mock-external-api:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,0 +1,46 @@
+{
+  "name": "creditcheck-backend",
+  "version": "1.0.0",
+  "description": "API de consulta de crédito com autenticação JWT, PostgreSQL, RabbitMQ e Socket.IO",
+  "main": "dist/server.js",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/server.js",
+    "start:worker": "node dist/worker/index.js",
+    "start:mock": "node dist/mock-external-api/server.js",
+    "dev": "tsx watch src/server.ts",
+    "dev:worker": "tsx watch src/worker/index.ts",
+    "dev:mock": "tsx watch src/mock-external-api/server.ts",
+    "seed:admin": "tsx src/scripts/seed-admin.ts",
+    "migrate:up": "node scripts/migrate.cjs up",
+    "migrate:down": "node scripts/migrate.cjs down"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.5",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "node-pg-migrate": "^7.9.1",
+    "pg": "^8.13.1",
+    "socket.io": "^4.8.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.6",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.5",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
