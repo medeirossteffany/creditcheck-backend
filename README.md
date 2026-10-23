@@ -1,4 +1,4 @@
-# creditcheck-backend
+# CreditCheck Backend
 
 API Node.js (TypeScript + Express) para consulta de crédito de clientes, com autenticação JWT,
 PostgreSQL, RabbitMQ e notificação em tempo real (Socket.IO) para o front-end React.
